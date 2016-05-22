@@ -1,0 +1,18 @@
+FROM flask
+
+RUN apt-get -y update && \
+    apt-get install --no-install-recommends -yq libpq-dev && \
+    pip install sqlalchemy psycopg2 Flask-JWT flask-cors && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ~/.cache
+
+RUN mkdir -p /etc/service/nginx
+ADD nginx.run /etc/service/nginx/run
+ADD site-default.conf /etc/nginx/sites-enabled/default
+ADD nginx.conf /etc/nginx/nginx.conf
+
+RUN mkdir -p /etc/service/uwsgi && \
+    addgroup --gid 9999 app && \
+    adduser --uid 9999 --gid 9999 --disabled-password --gecos "Application" app && \
+    usermod -L app
+ADD uwsgi.run /etc/service/uwsgi/run
+

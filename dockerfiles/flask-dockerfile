@@ -1,0 +1,38 @@
+FROM phusion/baseimage
+
+# gpg: key 18ADD4FF: public key "Benjamin Peterson <benjamin@python.org>" imported
+ENV GPG_KEY C01E1CAD5EA2C4F0B8E3571504C367C218ADD4FF
+ENV PYTHON_VERSION 2.7.11
+
+# TODO: clean up after this
+RUN apt-get update -qy && \
+    DEBIAN_FRONTEND=noninteractive apt-get -qy --no-install-recommends install \
+       build-essential libreadline-gplv2-dev libncursesw5-dev libssl-dev \
+       libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev \
+       nginx \
+    && set -ex \
+    && gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$GPG_KEY" \
+    && curl -fSL "https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz" -o python.tar.xz \
+    && curl -fSL "https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz.asc" -o python.tar.xz.asc \
+    && gpg --verify python.tar.xz.asc \
+    && mkdir -p /usr/local/src/python \
+    && tar -xJC /usr/local/src/python --strip-components=1 -f python.tar.xz \
+    && rm python.tar.xz* \
+    && rm -r ~/.gnupg \
+    \
+    && cd /usr/local/src/python \
+    && ./configure --prefix=/usr/local --enable-shared --enable-unicode=ucs4 \
+    && make -j$(nproc) \
+    && make install \
+    && ldconfig \
+    && curl -fSL 'https://bootstrap.pypa.io/get-pip.py' | /usr/local/bin/python \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install uwsgi flask \
+    && find /usr/local/ \
+       \( -type d -a -name test -o -name tests \) \
+       	  -o \( -type f -a -name '*.pyc' -o -name '*.pyo' \) \
+	     -exec rm -rf '{}' + \
+    && rm -rf /usr/local/src/python \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* ~/.cache
+
+ENV PATH=/usr/local/bin:$PATH

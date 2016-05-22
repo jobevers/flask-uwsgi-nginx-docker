@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd /app
+exec /sbin/setuser app /usr/local/bin/uwsgi -s /tmp/uwsgi.sock --chmod-socket=666 --module app --callable app
