@@ -20,7 +20,9 @@ def _randomString(length=10):
 
 
 def _hash(salt, password):
-    return hashlib.sha256(salt + password).hexdigest()
+    input_string = salt + password
+    input_bytes = input_string.encode('utf-8')
+    return hashlib.sha256(input_bytes).hexdigest()
 
 
 def register(db_session, username, password):

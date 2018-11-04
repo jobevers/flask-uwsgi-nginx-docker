@@ -6,7 +6,7 @@ import os
 import random
 
 import flask
-from flask.ext import cors
+import flask_cors as cors
 import flask_jwt
 import sqlalchemy
 from sqlalchemy import orm
